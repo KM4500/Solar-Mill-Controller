@@ -50,6 +50,8 @@ void setup() {
   EEPROM.get(startAddr, hour);
   EEPROM.get(startAddr + sizeof(int), minute);
   EEPROM.get(startAddr + 2 * sizeof(int), duration);
+  EEPROM.get(startAddr + 3 * sizeof(int), current);
+  EEPROM.get(startAddr + 4 * sizeof(int), voltage);
 
   displayDefault();
 }
@@ -106,6 +108,10 @@ void displayDefault() {  //displays current and duration on lcd
   lcd.print("Dur: ");
   lcd.print(duration);
   lcd.print(" min");
+  lcd.print(" C: ");
+  lcd.print(current);
+  lcd.print(" V: ");
+  lcd.print(voltage);
 }
 
 void displayRelayOn() {  //relay status and countdown on lcd
@@ -117,6 +123,10 @@ void displayRelayOn() {  //relay status and countdown on lcd
   lcd.print("Time Left: ");
   lcd.print(countdown);
   lcd.print(" sec");
+  lcd.print(" C: ");
+  lcd.print(current);
+  lcd.print(" V: ");
+  lcd.print(voltage);
 }
 
 void enterSettings() {
@@ -161,7 +171,7 @@ void enterSettings() {
       if (minute < 10) lcd.print('0');
       lcd.print(minute);
 
-      lcd.setCursor(0, 1);
+      lcd.setCursor(8, 0);
       lcd.print("Dur: ");
       lcd.print(duration);
       lcd.print(" min");
@@ -172,12 +182,16 @@ void saveSettings() {
   EEPROM.put(startAddr, hour);
   EEPROM.put(startAddr + sizeof(int), minute);
   EEPROM.put(startAddr + 2 * sizeof(int), duration);
+  EEPROM.get(startAddr + 3 * sizeof(int), current);
+  EEPROM.get(startAddr + 4 * sizeof(int), voltage);
 }
 void powerCut() {
-  int previousHour, previousMinute, previousDuration;
+  int previousHour, previousMinute, previousDuration, previousCurrent, previousVoltage;
   EEPROM.get(startAddr, previousHour);
   EEPROM.get(startAddr + sizeof(int), previousMinute);
   EEPROM.get(startAddr + 2 * sizeof(int), previousDuration);
+  EEPROM.get(startAddr + 3 * sizeof(int), previousCurrent);
+  EEPROM.get(startAddr + 4 * sizeof(int), previousVoltage);
 
   if (previousDuration > 0) {
     relayOn = true;
