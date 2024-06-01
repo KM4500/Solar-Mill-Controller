@@ -26,6 +26,9 @@ int current = 0;
 int voltage = 0;
 //EEPROM settings
 const int startAddr = 0;
+//settings menu state
+enum class SettingsState { TIME, DURATION, SAVE, CANCEL };
+SettingsState settingsState = SettingsState::TIME; //keeps track of the current state 
 
 void timerIsr() {  //updates the encoder's state regularly
   encoder->service();
@@ -61,15 +64,22 @@ void loop() {
   ClickEncoder::Button b = encoder->getButton();
 
   if (b == ClickEncoder::Clicked) {
-    relayOn = !relayOn;
-    if (relayOn) {
-      digitalWrite(RELAY_PIN, HIGH);
-      relayStartTime = millis();
-      countdown = duration * 60;
-    } else {
-      digitalWrite(RELAY_PIN, LOW);
+    if (settingsState == SettingsState::SAVE) {
+      saveSettings();
+      displayDefault();
+    } else if (settingsState == SettingsState::CANCEL) {
+      displayDefault();
+    } else if (settingsState == SettingsState::DELETE_ALL) {
+      deleteAllSettings();
+      displayDefault();
+    } 
+    else {
+      settingsState = static_cast<SettingsState>((static_cast<int>(settingsState) + 1) % 5);
     }
-    displayDefault();
+  } else if (b == ClickEncoder::DoubleClicked) {
+    enterSettings();
+  } else if (b == ClickEncoder::Held) {
+    deleteAllSettings();
   }
 
   if (relayOn) {
@@ -81,7 +91,6 @@ void loop() {
         digitalWrite(RELAY_PIN, LOW);
       }
     }
-    displayRelayOn();
   } else {
     displayDefault();
   }
@@ -97,79 +106,128 @@ void findTime() { //reads the current time and updates
 void displayDefault() {  //displays current and duration on lcd
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Time:");
   if (hour < 10) lcd.print('0');
   lcd.print(hour);
   lcd.print(':');
   if (minute < 10) lcd.print('0');
   lcd.print(minute);
-
-  lcd.setCursor(8, 0);
-  lcd.print("Dur:");
-  lcd.print(duration);
-  lcd.print("min");
-  lcd.print(" C:");
-  lcd.print(current);
-  lcd.print(" V:");
+  lcd.print("     |   ");
   lcd.print(voltage);
+  lcd.print(" V");
+  lcd.setCursor(0, 1);
+  lcd.print(duration);
+  lcd.print(" min   |   ");
+  lcd.print(current);
+  lcd.print(" A");
 }
-
-void displayRelayOn() {  //relay status and countdown on lcd
+// Display the confirmation options
+ void displayConfirmation() {
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Motor On");
-
+  if (settingsState == SettingsState::SAVE) {
+    lcd.print("SAVE        ✓");
+  } else {
+    lcd.print("SAVE         ");
+  }
   lcd.setCursor(0, 1);
-  lcd.print("Time Left:");
-  lcd.print(countdown);
-  lcd.print("sec");
-  lcd.print(" C:");
-  lcd.print(current);
-  lcd.print(" V:");
-  lcd.print(voltage);
-}
+  if (settingsState == SettingsState::CANCEL) {
+    lcd.print("SETTINGS?    X");
+  } else {
+    lcd.print("SETTINGS?    ");
+  }
 
- void enterSettings() {
+  // Display the delete all button
+  if (settingsState == SettingsState::DELETE_ALL) {
+    lcd.setCursor(0, 1);
+    lcd.print("DELETE ALL    ✓");
+  }
+}
+void displaySettings() {
   lcd.clear();
-  int settingsShift = 0;
+  // Display the settings
+  lcd.setCursor(0, 0);
+  lcd.print("TIME     |    DUR");
+  lcd.setCursor(0, 1);
+  if (settingsState == SettingsState::TIME) {
+    lcd.print(">");
+  } else {
+    lcd.print(" ");
+  }
+  if (hour < 10) lcd.print('0');
+  lcd.print(hour);
+  lcd.print(':');
+  if (minute < 10) lcd.print('0');
+  lcd.print(minute);
+  lcd.print("    |    ");
+  lcd.print(duration);
+  lcd.print(" min");
+  displayConfirmation();
+}
+  
+
+void enterSettings() {
+  lcd.clear();
+  settingsState = SettingsState::TIME;
 
   while (true) {
+    displaySettings();
+
     ClickEncoder::Button b = encoder->getButton();
     if (b == ClickEncoder::Clicked) {
-      if (settingsShift == 2) {
+      if (settingsState == SettingsState::SAVE) {
+        saveSettings();
+        displayDefault();
+        return;
+      } else if (settingsState == SettingsState::CANCEL) {
+        displayDefault();
+        return;
+      } else if (settingsState == SettingsState::DELETE_ALL) {
+        deleteAllSettings();
+        displayDefault();
+        return;
+      } else {
+        settingsState = static_cast<SettingsState>((static_cast<int>(settingsState) + 1) % 5);
+      }
+    } else if (b == ClickEncoder::DoubleClicked) {
+      if (settingsState == SettingsState::DELETE_ALL) {
+        deleteAllSettings();
+        displayDefault();
+        return;
+      } else {
         saveSettings();
         displayDefault();
         return;
       }
-      settingsShift = (settingsShift + 1) % 3;
     }
 
     value += encoder->getValue();
     if (value != last) {
       last = value;
-      if (settingsShift == 0) {
+      if (settingsState == SettingsState::TIME) {
         hour = (hour + value) % 24;
-      } else if (settingsShift == 1) {
         minute = (minute + value) % 60;
-      } else if (settingsShift == 2) {
+      } else if (settingsState == SettingsState::DURATION) {
         duration = (duration + value) % 61;
       }
-
-      lcd.setCursor(0, 0);
-      lcd.print("Time:");
-      if (hour < 10) lcd.print('0');
-      lcd.print(hour);
-      lcd.print(':');
-      if (minute < 10) lcd.print('0');
-      lcd.print(minute);
-
-      lcd.setCursor(8, 0);
-      lcd.print("Dur:");
-      lcd.print(duration);
-      lcd.print("min");
     }
   }
 }
+
+void deleteAllSettings() {
+  EEPROM.put(startAddr, 0);
+  EEPROM.put(startAddr + sizeof(int), 0);
+  EEPROM.put(startAddr + 2 * sizeof(int), duration); // Reset duration
+  EEPROM.put(startAddr + 3 * sizeof(int), current); // Reset current
+  EEPROM.put(startAddr + 4 * sizeof(int), voltage); // Reset voltage
+  
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("All settings");
+  lcd.setCursor(0, 1);
+  lcd.print("deleted.");
+  delay(2000);
+}
+
 void saveSettings() {
   EEPROM.put(startAddr, hour);
   EEPROM.put(startAddr + sizeof(int), minute);
