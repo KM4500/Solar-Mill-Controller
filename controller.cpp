@@ -131,9 +131,9 @@ void displayDefault() {  //displays current and duration on lcd
   }
   lcd.setCursor(0, 1);
   if (settingsState == SettingsState::CANCEL) {
-    lcd.print("SETTINGS?    X");
+    lcd.print("SETTINGS     X");
   } else {
-    lcd.print("SETTINGS?    ");
+    lcd.print("SETTINGS      ");
   }
 
   // Display the delete all button
