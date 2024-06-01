@@ -97,7 +97,7 @@ void findTime() { //reads the current time and updates
 void displayDefault() {  //displays current and duration on lcd
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Time: ");
+  lcd.print("Time:");
   if (hour < 10) lcd.print('0');
   lcd.print(hour);
   lcd.print(':');
@@ -105,12 +105,12 @@ void displayDefault() {  //displays current and duration on lcd
   lcd.print(minute);
 
   lcd.setCursor(8, 0);
-  lcd.print("Dur: ");
+  lcd.print("Dur:");
   lcd.print(duration);
-  lcd.print(" min");
-  lcd.print(" C: ");
+  lcd.print("min");
+  lcd.print(" C:");
   lcd.print(current);
-  lcd.print(" V: ");
+  lcd.print(" V:");
   lcd.print(voltage);
 }
 
@@ -120,12 +120,12 @@ void displayRelayOn() {  //relay status and countdown on lcd
   lcd.print("Motor On");
 
   lcd.setCursor(0, 1);
-  lcd.print("Time Left: ");
+  lcd.print("Time Left:");
   lcd.print(countdown);
-  lcd.print(" sec");
-  lcd.print(" C: ");
+  lcd.print("sec");
+  lcd.print(" C:");
   lcd.print(current);
-  lcd.print(" V: ");
+  lcd.print(" V:");
   lcd.print(voltage);
 }
 
@@ -156,7 +156,7 @@ void displayRelayOn() {  //relay status and countdown on lcd
       }
 
       lcd.setCursor(0, 0);
-      lcd.print("Time: ");
+      lcd.print("Time:");
       if (hour < 10) lcd.print('0');
       lcd.print(hour);
       lcd.print(':');
@@ -164,9 +164,9 @@ void displayRelayOn() {  //relay status and countdown on lcd
       lcd.print(minute);
 
       lcd.setCursor(8, 0);
-      lcd.print("Dur: ");
+      lcd.print("Dur:");
       lcd.print(duration);
-      lcd.print(" min");
+      lcd.print("min");
     }
   }
 }
