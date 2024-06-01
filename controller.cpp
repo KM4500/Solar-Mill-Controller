@@ -129,37 +129,29 @@ void displayRelayOn() {  //relay status and countdown on lcd
   lcd.print(voltage);
 }
 
-void enterSettings() {
+ void enterSettings() {
   lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Set Time: ");
-  if (hour < 10) lcd.print('0');
-  lcd.print(hour);
-  lcd.print(':');
-  if (minute < 10) lcd.print('0');
-  lcd.print(minute);
-
-  lcd.setCursor(0, 1);
-  lcd.print("Dur: ");
-  lcd.print(duration);
-  lcd.print(" min");
+  int settingsShift = 0;
 
   while (true) {
     ClickEncoder::Button b = encoder->getButton();
     if (b == ClickEncoder::Clicked) {
-      saveSettings();
-      displayDefault();
-      return;
+      if (settingsShift == 2) {
+        saveSettings();
+        displayDefault();
+        return;
+      }
+      settingsShift = (settingsShift + 1) % 3;
     }
 
     value += encoder->getValue();
     if (value != last) {
       last = value;
-      if (menuShift == 0) {
+      if (settingsShift == 0) {
         hour = (hour + value) % 24;
-      } else if (menuShift == 1) {
+      } else if (settingsShift == 1) {
         minute = (minute + value) % 60;
-      } else if (menuShift == 2) {
+      } else if (settingsShift == 2) {
         duration = (duration + value) % 61;
       }
 
