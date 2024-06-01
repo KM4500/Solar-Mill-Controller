@@ -156,7 +156,7 @@ void displayRelayOn() {  //relay status and countdown on lcd
       }
 
       lcd.setCursor(0, 0);
-      lcd.print("Set Time: ");
+      lcd.print("Time: ");
       if (hour < 10) lcd.print('0');
       lcd.print(hour);
       lcd.print(':');
