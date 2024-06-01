@@ -104,7 +104,7 @@ void displayDefault() {  //displays current and duration on lcd
   if (minute < 10) lcd.print('0');
   lcd.print(minute);
 
-  lcd.setCursor(0, 1);
+  lcd.setCursor(8, 0);
   lcd.print("Dur: ");
   lcd.print(duration);
   lcd.print(" min");
